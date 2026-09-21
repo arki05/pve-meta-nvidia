@@ -1,3 +1,9 @@
+pve-meta-nvidia (0.0.4-1) trixie; urgency=medium
+
+  * Synced lockfile. 0.0.2 and 0.0.3 never published.
+
+ -- Julius Arkenberg <julius@rkenberg.de>  Mon, 21 Sep 2026 22:00:00 +0200
+
 pve-meta-nvidia (0.0.3-1) trixie; urgency=medium
 
   * CI formatting only. 0.0.2 never published.

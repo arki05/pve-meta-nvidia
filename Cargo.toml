@@ -1,7 +1,7 @@
 [package]
 name = "pve-meta-nvidia"
 description = "NVIDIA GPUs for unprivileged LXC guests, driven by pve-meta documents"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 license = "AGPL-3.0-or-later"
 authors = ["Julius Arkenberg <julius@rkenberg.de>"]
