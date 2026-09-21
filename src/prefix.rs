@@ -126,7 +126,10 @@ fn bootstrap(node: &str, inv: &Inventory) -> String {
         ),
         ("selector", map(vec![("all", Value::from(true))])),
         ("schema", map(vec![("type", Value::from("object"))])),
-        ("nodes", map(vec![(node, map(vec![("schema", node_schema(inv))]))])),
+        (
+            "nodes",
+            map(vec![(node, map(vec![("schema", node_schema(inv))]))]),
+        ),
     ]);
     serde_yaml_ng::to_string(&file).expect("a mapping of strings always serialises")
 }
@@ -134,8 +137,10 @@ fn bootstrap(node: &str, inv: &Inventory) -> String {
 /// A root merge patch carrying only this node's entry: recursive merge
 /// keeps every other node's entry untouched.
 fn merge_entry(node: &str, schema: &Value) -> String {
-    let patch =
-        map(vec![("nodes", map(vec![(node, map(vec![("schema", schema.clone())]))]))]);
+    let patch = map(vec![(
+        "nodes",
+        map(vec![(node, map(vec![("schema", schema.clone())]))]),
+    )]);
     serde_yaml_ng::to_string(&patch).expect("a mapping of strings always serialises")
 }
 
@@ -237,7 +242,11 @@ pub fn sync(node: &str, inv: &Inventory) -> Result<Action> {
         Step::Absent => Ok(Action::Absent),
         Step::Unchanged => Ok(Action::Unchanged),
         Step::RemoveEntry => {
-            cmd::run("pve-meta", &["merge", &id, "--text", &merge_remove(node)], cmd::META)?;
+            cmd::run(
+                "pve-meta",
+                &["merge", &id, "--text", &merge_remove(node)],
+                cmd::META,
+            )?;
             Ok(Action::EntryRemoved)
         }
         // Handed over as an argument, not through a file: the document is a
@@ -318,7 +327,8 @@ mod tests {
 
     #[test]
     fn merge_payloads_name_only_our_entry() {
-        let v: Value = serde_yaml_ng::from_str(&merge_entry("jarvis", &node_schema(&inv()))).unwrap();
+        let v: Value =
+            serde_yaml_ng::from_str(&merge_entry("jarvis", &node_schema(&inv()))).unwrap();
         assert_eq!(v.as_mapping().unwrap().len(), 1);
         assert_eq!(v["nodes"]["jarvis"]["schema"], node_schema(&inv()));
         let v: Value = serde_yaml_ng::from_str(&merge_remove("jarvis")).unwrap();
@@ -335,7 +345,10 @@ mod tests {
             nodes.insert(Value::from(node), entry);
         }
         let mut top = Mapping::new();
-        top.insert(Value::from("selector"), map(vec![("all", Value::from(true))]));
+        top.insert(
+            Value::from("selector"),
+            map(vec![("all", Value::from(true))]),
+        );
         top.insert(Value::from("nodes"), Value::Mapping(nodes));
         Value::Mapping(top)
     }
@@ -356,7 +369,10 @@ mod tests {
         empty.gpus.clear();
         assert_eq!(decide("node1", &empty, Some(&cluster)), Step::RemoveEntry);
         assert_eq!(decide("node1", &empty, None), Step::Absent);
-        assert_eq!(decide("node1", &empty, Some(&cluster_with(vec![]))), Step::Absent);
+        assert_eq!(
+            decide("node1", &empty, Some(&cluster_with(vec![]))),
+            Step::Absent
+        );
     }
 
     #[test]
@@ -369,7 +385,10 @@ mod tests {
         assert_eq!(decide("node1", &base, Some(&cluster)), Step::Unchanged);
         // Other nodes' entries never trigger a write, however stale.
         let foreign = cluster_with(vec![("node2", entry_for(&inv()))]);
-        assert!(matches!(decide("node1", &base, Some(&foreign)), Step::Merge(_)));
+        assert!(matches!(
+            decide("node1", &base, Some(&foreign)),
+            Step::Merge(_)
+        ));
         // No file at all bootstraps the whole document.
         assert!(matches!(decide("node1", &base, None), Step::Bootstrap(_)));
     }
