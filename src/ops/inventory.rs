@@ -21,7 +21,7 @@ pub fn action_word(action: &Action) -> &'static str {
     match action {
         Action::Written => "written",
         Action::Unchanged => "unchanged",
-        Action::Removed => "removed",
+        Action::EntryRemoved => "entry removed",
         Action::Absent => "not there",
         Action::Kept => "kept (the driver is not loaded)",
     }
@@ -44,7 +44,7 @@ pub fn run(ctx: &Ctx, json: bool) -> Result<()> {
                 "gpus": inv.gpus,
                 "uvm_major": inv.uvm_major,
                 "notes": inv.notes,
-                "prefix": { "id": prefix::doc_id(&ctx.node), "action": action },
+                "prefix": { "id": prefix::doc_id(), "action": action },
             }))?
         );
         return Ok(());
@@ -67,6 +67,6 @@ pub fn run(ctx: &Ctx, json: bool) -> Result<()> {
             }
         );
     }
-    println!("{}: {}", prefix::doc_id(&ctx.node), action_word(&action?));
+    println!("{}: {}", prefix::doc_id(), action_word(&action?));
     Ok(())
 }

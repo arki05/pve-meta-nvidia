@@ -1,3 +1,12 @@
+pve-meta-nvidia (0.0.2-1) trixie; urgency=medium
+
+  * The per-node prefix document (nodes/<node>/prefixes/gpu, removed in
+    pve-meta 0.2) becomes an entry in the cluster gpu file: inventory
+    merges only nodes.<node>, bootstraps a missing file whole, and removes
+    its entry when the driver is loaded with no cards. Needs pve-meta 0.2+.
+
+ -- Julius Arkenberg <julius@rkenberg.de>  Mon, 21 Sep 2026 21:30:00 +0200
+
 pve-meta-nvidia (0.0.1-1) trixie; urgency=medium
 
   * First version. A container whose pve-meta document has a `gpu` subtree

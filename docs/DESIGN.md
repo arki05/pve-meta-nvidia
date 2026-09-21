@@ -30,9 +30,9 @@ privileged guest with a `gpu` key is refused here too, with that reason.
 ## The node publishes its own hardware
 
 Which GPUs a host has is not the cluster's to state, which is what pve-meta's
-node-level prefix files are for (its decision 020). This tool writes the whole
-`gpu` schema into `/etc/pve/nodes/<node>/meta.d/prefixes/gpu.yaml`, one
-`devices.properties.<uuid>` row per card, named and sized from `nvidia-smi`.
+per-node prefix overrides are for (its decision 025): this tool writes one
+`devices.properties.<uuid>` row per card, named and sized from `nvidia-smi`,
+into its own `nodes.<node>` entry of the cluster `gpu` prefix file.
 Consequences that are the point:
 
 * a guest on a node without GPUs is offered no `gpu` rows at all, so the editor
@@ -41,18 +41,19 @@ Consequences that are the point:
 * there is no packaged prefix, so there is nothing to shadow, nothing to keep in
   step with the node files, and uninstalling leaves one removable file per node.
 
-The file is written only when its content differs, compared as a document rather
+The entry is written only when its content differs, compared as a document rather
 than as text: every write moves pve-meta's version token and wakes every operator
-polling it, including this one.
+polling it, including this one. A merge names only this node's entry, so two
+inventories never clobber each other.
 
-A node whose driver is **loaded** and has no cards has no file: a node that can
+A node whose driver is **loaded** and has no cards removes its entry: a node that can
 serve a GPU and has none should not offer one. A node whose driver is **not
-loaded keeps the file it has**, and no guest's config is touched either —
+loaded keeps the entry it has**, and no guest's config is touched either —
 stripping every container's GPU lines, or blanking every editor row, because a
 driver package is mid-upgrade is exactly the accident this operator exists to
 avoid. The trade-off is stated rather than solved: when a card is pulled for
 good, or the driver uninstalled for good, the file stays until someone removes
-it with `pve-meta delete nodes/<node>/prefixes/gpu`. A file that outlives its
+it with `pve-meta merge prefixes/gpu --text 'nodes: {<node>: null}'`. A file that outlives its
 cards costs a stale row in an editor; a file that vanishes for thirty seconds
 costs every operator in the cluster a version-token wake-up and every guest on
 the node its rows.
@@ -313,7 +314,7 @@ document).
 
 So the node keeps a record of the guests it wrote lines into, one empty file per
 vmid under `/var/lib/pve-meta-nvidia/managed`. It is the same idea as
-pve-meta-publish's manifest — only replace or remove what you wrote — kept on the
+pve-meta-guest-files's manifest — only replace or remove what you wrote — kept on the
 node because the config it describes is the node's. A vmid is dropped from the
 record when it is no longer one of this node's containers, so a destroyed or
 migrated guest leaves nothing.

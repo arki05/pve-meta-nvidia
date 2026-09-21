@@ -429,11 +429,11 @@ impl Daemon {
                 self.published = Some(inv);
                 if matches!(
                     action,
-                    crate::prefix::Action::Written | crate::prefix::Action::Removed
+                    crate::prefix::Action::Written | crate::prefix::Action::EntryRemoved
                 ) {
                     eprintln!(
                         "{}: {}",
-                        crate::prefix::doc_id(&ctx.node),
+                        crate::prefix::doc_id(),
                         inventory::action_word(&action)
                     );
                 }

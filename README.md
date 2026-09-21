@@ -9,25 +9,25 @@ Reference for using it. Why it is shaped this way: [`docs/DESIGN.md`](docs/DESIG
 
 ## How it works
 
-Each node publishes the cards it has as its own pve-meta prefix file,
-`nodes/<node>/prefixes/gpu`, so the guests on a GPU node get typed `gpu` rows in
+Each node publishes the cards it has as its own entry in the cluster `gpu`
+prefix file, `nodes.<node>` inside `/etc/pve/meta.d/prefixes/gpu.yaml`, so
+the guests on a GPU node get typed `gpu` rows in
 the Metadata tab — by UUID, with the model and bus location as the row's
 description — and the guests everywhere else get none:
 
 ```yaml
-# pve-meta document `nodes/jarvis/prefixes/gpu`, written by this tool
-description: NVIDIA GPUs on jarvis (written by pve-meta-nvidia)
-selector:
-  all: true
-schema:
-  type: object
-  properties:
-    devices:
+# in /etc/pve/meta.d/prefixes/gpu.yaml, written by this tool
+nodes:
+  jarvis:
+    schema:
       type: object
-      description: GPUs this container gets, by UUID
       properties:
-        GPU-8ddd601a-494f-9489-46c6-d23129ccad16:
-          type: boolean
+        devices:
+          type: object
+          description: GPUs this container gets, by UUID
+          properties:
+            GPU-8ddd601a-494f-9489-46c6-d23129ccad16:
+              type: boolean
           default: false
           description: Tesla T10 16 GB · 0000:0a:00.0
     ...
@@ -77,15 +77,15 @@ clear when a restart is owed.
 
 ## Requirements
 
-* PVE 9 (Debian trixie), `pve-meta` 0.1.3 or newer, `pve-container`, `lxc-pve`.
+* PVE 9 (Debian trixie), `pve-meta` 0.2 or newer (the `nodes:` override), `pve-container`, `lxc-pve`.
 * The NVIDIA driver on the node, installed any way you like (the `.run`
   installer, `nvidia-driver` from Debian, a DKMS build). It is not a package
   dependency and is checked for at runtime: a node with no `/proc/driver/nvidia`
   publishes no GPUs and **touches no guest at all**, and keeps the prefix file it
   already wrote — a driver mid-upgrade must not take the GPU lines away from
   every container on the node, nor blank the editor's rows for a few seconds.
-  When a card is pulled or the driver uninstalled for good, that file stays
-  until you remove it: `pve-meta delete nodes/<node>/prefixes/gpu`.
+  When a card is pulled or the driver uninstalled for good, that entry stays
+  until you remove it: `pve-meta merge prefixes/gpu --text 'nodes: {<node>: null}'`.
 * `nvidia-modprobe` (part of every driver install), because `nvidia-uvm` is
   loaded lazily: at boot nothing has opened `/dev/nvidia-uvm` yet, so the module
   is not in `/proc/devices` and its major cannot be written into a config. Each
@@ -185,9 +185,9 @@ container's config file is the applied state.
 * **Nothing arbitrates.** Two containers may select the same card, and both get
   it; the driver time-slices and they share its memory. That is the same thing
   two processes on the host do, and this operator adds no scheduler of its own.
-* **The node's prefix file is this node's to write.** A hand edit of
-  `nodes/<node>/prefixes/gpu` is overwritten at the next inventory pass, within
-  five minutes. Edit a guest's `gpu` subtree, never the node's file.
+* **The node's prefix entry is this node's to write.** A hand edit of
+  `nodes.<node>` in `prefixes/gpu` is overwritten at the next inventory pass, within
+  five minutes. Edit a guest's `gpu` subtree, never the node's entry.
 * **MIG is not supported.** A MIG instance is not a device of
   `/proc/driver/nvidia/gpus`, so it could be neither offered nor turned into a
   device rule; a `MIG-…` id in `devices` is refused rather than half-honoured.
@@ -207,16 +207,16 @@ container's config file is the applied state.
   it records what this node wrote, and is read only to answer "was this line
   mine?".
 * **Trust.** Write access to a guest's `gpu` subtree is enough to attach one of
-  the host's GPUs to that container. A pve-meta token scoped to `gpu` is
-  therefore a grant over host hardware, not a label — in the same class as
-  `VM.Config.Options` on the guest, and to be given accordingly.
-* **Uninstalling.** Removing the package leaves this node's `gpu` prefix file and
-  the managed lines where they are; `pve-meta delete nodes/<node>/prefixes/gpu`
-  removes the file.
+  the host's GPUs to that container. Under pve-meta 0.2 that is
+  `VM.Config.Options` on the guest — a grant over host hardware, not a label —
+  and to be given accordingly.
+* **Uninstalling.** Removing the package leaves this node's `gpu` entry and
+  the managed lines where they are; merging `nodes: {<node>: null}` into
+  `prefixes/gpu` removes the entry.
 
 ## A related operator
 
-`pve-compose`, `pve-meta-publish` and this one are the same shape: a document
+`pve-compose`, `pve-meta-guest-files` and this one are the same shape: a document
 subtree, a per-node loop driven by pve-meta's version token, a per-guest lock,
 `Kind::Lxc` from the vmlist, a "log this state once" helper. Whether that
 plumbing becomes a shared crate is an open question; three copies is where it
