@@ -1,0 +1,29 @@
+name: audit
+
+# RustSec advisories against Cargo.lock: on every change to the dependency
+# set, and weekly regardless, since an advisory can appear for a lock file
+# that has not moved.
+
+on:
+  push:
+    paths: ["Cargo.lock", "Cargo.toml", ".github/workflows/audit.yml"]
+  pull_request:
+    paths: ["Cargo.lock", "Cargo.toml", ".github/workflows/audit.yml"]
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cargo-audit on stable
+        run: |
+          rustup toolchain install stable --profile minimal
+          cargo +stable install cargo-audit --locked
+      - name: Audit Cargo.lock
+        run: cargo +stable audit

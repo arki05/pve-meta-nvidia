@@ -380,6 +380,6 @@ validated as `GPU-` plus hex and dashes; `require_cuda` is digits and dots. The
 generated prefix document is handed to `pve-meta set --text`, not written to a
 staging file: a root process that writes a predictable path in `/tmp` is one
 symlink away from truncating something else. Neither can carry a newline, a comma or a space, so a document can never
-become a second config line or a second `--device` argument. A holder of a
-pve-meta token scoped to `gpu` can attach the host's GPUs to a container — that
-is the feature — and nothing more.
+become a second config line or a second `--device` argument. Whoever may write
+a guest's `gpu` subtree — under pve-meta 0.2, `VM.Config.Options` on the guest —
+can attach the host's GPUs to a container: that is the feature, and nothing more.
