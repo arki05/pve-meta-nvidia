@@ -1,0 +1,3 @@
+# unsafe-libyaml, the Rust rewrite serde_yaml_ng builds on. It is Rust source
+# compiled into the binary, not a copy of the C libyaml.
+pve-meta-nvidia: embedded-library libyaml [usr/sbin/pve-meta-nvidia]

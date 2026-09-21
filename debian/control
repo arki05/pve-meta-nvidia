@@ -1,0 +1,22 @@
+Source: pve-meta-nvidia
+Section: admin
+Priority: optional
+Maintainer: Julius Arkenberg <julius@rkenberg.de>
+Build-Depends: debhelper-compat (= 13), cargo, rustc
+Standards-Version: 4.6.2
+Homepage: https://github.com/arki05/pve-meta-nvidia
+
+Package: pve-meta-nvidia
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ pve-meta (>= 0.1.3), pve-container, lxc-pve, libnvidia-container-tools
+Description: NVIDIA GPUs for unprivileged LXC guests, from pve-meta documents
+ A container whose pve-meta document has a gpu subtree gets the host's GPUs
+ through LXC's own nvidia hook: the cgroup device rules for the cards it
+ selected, the hook line and the NVIDIA_* environment the hook reads. Nothing
+ is installed inside the guest.
+ .
+ Each node publishes its own cards as the gpu prefix file of its node
+ directory, so a guest is offered exactly the GPUs of the node it runs on.
+ The NVIDIA driver itself is not a dependency: it is installed in several
+ ways and is checked for at runtime.

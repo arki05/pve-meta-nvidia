@@ -1,0 +1,28 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+export DH_VERBOSE = 1
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+ifneq ($(DEB_DISTRIBUTION),UNRELEASED)
+	@perl -ne 'if (/^version\s*=\s*"(\d+(?:\.\d+)+)"/) { my $$v_cargo = $$1; my $$v_deb = "$(DEB_VERSION_UPSTREAM)"; \
+	    die "ERROR: d/changelog <-> Cargo.toml version mismatch: $$v_cargo != $$v_deb\n" if $$v_cargo ne $$v_deb; exit(0); }' Cargo.toml
+endif
+	dh_auto_configure
+
+override_dh_auto_build:
+	$(MAKE) build
+
+override_dh_auto_install:
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/pve-meta-nvidia PREFIX=/usr
+
+override_dh_auto_test:
+	# `cargo test` runs on the build host before packaging.
+
+# Enabled and started: the daemon does nothing until a guest has a gpu key.
+override_dh_installsystemd:
+	dh_installsystemd --restart-after-upgrade

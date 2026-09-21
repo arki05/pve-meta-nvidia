@@ -1,0 +1,29 @@
+[package]
+name = "pve-meta-nvidia"
+description = "NVIDIA GPUs for unprivileged LXC guests, driven by pve-meta documents"
+version = "0.0.1"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+authors = ["Julius Arkenberg <julius@rkenberg.de>"]
+repository = "https://github.com/arki05/pve-meta-nvidia"
+
+[lib]
+name = "pve_meta_nvidia"
+path = "src/lib.rs"
+
+[[bin]]
+name = "pve-meta-nvidia"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+libc = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+serde_yaml_ng = "0.10"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

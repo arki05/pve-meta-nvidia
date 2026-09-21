@@ -1,0 +1,38 @@
+[Unit]
+Description=pve-meta-nvidia reconcile loop
+Documentation=https://github.com/arki05/pve-meta-nvidia
+# The first pass is the boot pass: /dev/nvidia-uvm's major is allocated anew on
+# every boot, so the managed lines have to carry this boot's before PVE starts
+# the containers that autostart. Type=notify makes pve-guests.service wait for
+# that pass; it says ready whether the pass did anything or not.
+#
+# What Before= promises is exactly this much: the node's GPUs were read, and
+# the first 60s of guests were reconciled, in vmid order, taking no container
+# config lock that was not free. The rest follow in the ordinary loop a poll
+# later; a container whose guest was not reached starts without its GPU until
+# it is restarted, and the journal says so. Writing this node's prefix file --
+# a courtesy to the editor -- happens after ready, not before it.
+After=pve-cluster.service
+Requires=pve-cluster.service
+Before=pve-guests.service
+
+[Service]
+Type=notify
+NotifyAccess=main
+Environment=LANG=C.UTF-8 LC_ALL=C.UTF-8
+ExecStart=/usr/sbin/pve-meta-nvidia daemon
+StateDirectory=pve-meta-nvidia
+# A backstop, not the boot pass's bound: the pass bounds itself, and every tool
+# it runs has its own deadline (30s at most), so the worst honest case is the
+# inventory (at most ~40s: a lazy nvidia-modprobe and an nvidia-smi), the 60s
+# budget, and one outstanding call.
+TimeoutStartSec=300
+# Every bounded step says the loop is still turning -- around each external
+# command, and between guests. The interval is well above the longest single
+# step, so this catches a step that never ends and never slow-but-legal work.
+WatchdogSec=180
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

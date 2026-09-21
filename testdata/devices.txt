@@ -1,0 +1,15 @@
+Character devices:
+  1 mem
+  4 /dev/vc/0
+  5 /dev/tty
+ 10 misc
+ 13 input
+195 nvidia
+234 nvidia-frontend
+505 nvidia-uvm
+506 nvidia-caps
+
+Block devices:
+  7 loop
+  8 sd
+252 device-mapper

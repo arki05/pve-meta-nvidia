@@ -1,0 +1,24 @@
+pve-meta-nvidia (0.0.1-1) trixie; urgency=medium
+
+  * First version. A container whose pve-meta document has a `gpu` subtree
+    gets the node's GPUs through LXC's stock nvidia hook: cgroup device rules
+    for the selected cards, the hook line, and the NVIDIA_* environment.
+  * Each node writes its own cards into `nodes/<node>/prefixes/gpu`, so a
+    guest is offered the GPUs of the node it is on and nothing else.
+  * Verbs: daemon, inventory, reconcile, status.
+  * The reconcile loop watches the documents of this node's containers and
+    plans every one of them every poll; its first pass runs before
+    pve-guests.service, because the nvidia-uvm major is allocated anew on every
+    boot and that module is loaded lazily.
+  * Every tool the loop runs has a deadline and is killed with its process
+    group if it misses it, without waiting for the kill to work; the unit
+    carries a systemd watchdog fed between bounded steps, so a wedged GPU tool
+    cannot leave a daemon that runs and reconciles nothing.
+  * The boot pass has a budget and takes no container config lock it cannot
+    have at once, so being ordered before pve-guests.service never delays the
+    containers by more than that.
+  * Refuses a privileged container and a container with a `devN:` entry for an
+    NVIDIA device, never touches a guest without a `gpu` key, and touches
+    nothing at all on a node whose driver is not loaded.
+
+ -- Julius Arkenberg <julius@rkenberg.de>  Thu, 17 Sep 2026 20:00:00 +0200

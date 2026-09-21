@@ -1,0 +1,11 @@
+Model: 		 Tesla T10
+IRQ:   		 67
+GPU UUID: 	 GPU-1f4d0e27-1111-2222-3333-444455556666
+Video BIOS: 	 90.04.4b.00.01
+Bus Type:  	 PCIe
+DMA Size:   	 47 bits
+DMA Mask:   	 0x7fffffffffff
+Bus Location: 	 0000:0b:00.0
+Device Minor: 	 1
+Blacklisted:	 No
+GPU Excluded:	 No
